@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "pretest": "npm run asbuild:release",
+    "test": "node ./scripts/run-jest-with-local-runner.cjs",
+    "audit:privacy": "node scripts/check-release-privacy.cjs",
+    "audit:contracts": "bash scripts/govulncheck-contract-runner.sh",
+    "audit:compatibility": "node scripts/check-compatibility-lock.cjs",
     "asbuild:debug": "asc assembly/index.ts --target debug",
     "asbuild:release": "asc assembly/index.ts --target release",
     "asbuild": "npm run asbuild:debug && npm run asbuild:release",
@@ -12,8 +16,13 @@
   },
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "npm": ">=11.16.0"
+  },
   "devDependencies": {
-    "assemblyscript": "^0.27.29",
+    "assemblyscript": "0.19.23",
+    "idena-sdk-as": "file:vendor/idena-sdk-as",
     "jest": "^29.7.0"
   },
   "type": "module",
@@ -22,8 +31,5 @@
       "import": "./build/release.js",
       "types": "./build/release.d.ts"
     }
-  },
-  "dependencies": {
-    "idena-sdk-as": "0.0.29"
   }
 }

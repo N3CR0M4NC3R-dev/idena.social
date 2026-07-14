@@ -1,0 +1,61 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Dependency audit
+        run: npm audit --audit-level=moderate
+
+      - name: Dependency signature audit
+        run: npm audit signatures
+
+      - name: Run privacy audit
+        run: npm run audit:privacy
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: 1.26.5
+          cache: true
+          cache-dependency-path: test-contract-runner/go.sum
+
+      - name: Prepare contract runner sources
+        run: |
+          git init ../idena-go
+          git -C ../idena-go remote add origin https://github.com/ubiubi18/idena-go.git
+          git -C ../idena-go fetch --depth 1 origin aafb254786ac3c82308550a7a82642019f077d6b
+          git -C ../idena-go checkout --detach FETCH_HEAD
+          git init ../idena-wasm-binding
+          git -C ../idena-wasm-binding remote add origin https://github.com/ubiubi18/idena-wasm-binding.git
+          git -C ../idena-wasm-binding fetch --depth 1 origin 67ba065fdb02aa07cced2a43a261e481ca5b39d9
+          git -C ../idena-wasm-binding checkout --detach FETCH_HEAD
+
+      - name: Vulnerability scan
+        run: npm run audit:contracts
+
+      - name: Test
+        run: npm test
+
+      - name: Compatibility and deterministic contract audit
+        run: npm run audit:compatibility

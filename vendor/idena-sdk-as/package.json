@@ -1,0 +1,19 @@
+{
+    "name": "idena-sdk-as",
+    "version": "0.0.29",
+    "description": "Collection of packages for developing IDENA smart contracts in AssemblyScript",
+    "types": "assembly/index.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com:idena-network/idena-sdk-as",
+        "directory": "sdk"
+    },
+    "license": "(MIT AND Apache-2.0)",
+    "dependencies": {
+        "idena-sdk-bindgen": "0.0.29",
+        "idena-sdk-core": "0.0.29"
+    },
+    "engines": {
+        "node": ">=12.0.0"
+    }
+}
