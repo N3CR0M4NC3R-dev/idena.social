@@ -3,12 +3,11 @@ const fs = require('fs');
 
 const {
     toHexString,
-} = require('idena-sdk-js');
-
-const {
     ContractRunnerProvider,
     ContractArgumentFormat,
-} = require('idena-sdk-tests');
+} = require('./support/contract-runner.cjs');
+
+const CONTRACT_RUNNER_URL = process.env.IDENA_CONTRACT_RUNNER_URL || 'http://localhost:3333';
 
 function str2hex(str) {
     return toHexString(Buffer.from(str));
@@ -18,14 +17,39 @@ function rmZeros(str) {
     return str.replaceAll(/[.0]+$/g, '');
 }
 
-const provider = ContractRunnerProvider.create('http://localhost:3333', '');
+const provider = ContractRunnerProvider.create(CONTRACT_RUNNER_URL, '');
+
+function resolveBuiltWasm() {
+    const candidates = [
+        path.join('.', 'build', 'release.wasm'),
+        path.join('.', 'build', 'release', 'idena.social.wasm'),
+    ];
+
+    const wasm = candidates.find((candidate) => fs.existsSync(candidate));
+
+    if (!wasm) {
+        throw new Error(`Compiled wasm not found. Looked in: ${candidates.join(', ')}`);
+    }
+
+    return wasm;
+}
 
 describe('idena.social.wasm', () => {
     let deployReceipt;
     let sender;
 
+    beforeAll(async () => {
+        try {
+            await provider.Chain.godAddress();
+        } catch (error) {
+            throw new Error(
+                `Contract runner at ${CONTRACT_RUNNER_URL} is unavailable. Start the local Idena contract runner before running this suite. ${error.message}`
+            );
+        }
+    });
+
     beforeEach(async () => {
-        const wasm = path.join('.', 'build', 'release', 'idena.social.wasm');
+        const wasm = resolveBuiltWasm();
 
         const code = fs.readFileSync(wasm);
 
